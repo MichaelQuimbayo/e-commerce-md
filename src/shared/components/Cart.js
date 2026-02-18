@@ -1,14 +1,21 @@
 import React from 'react';
 import { useCart } from '../context/CartContext';
 import { X } from 'lucide-react';
+import { useRouter } from 'next/router';
 
 const Cart = ({ isOpen, onClose }) => {
   const { cartItems, removeFromCart, updateQuantity } = useCart();
+  const router = useRouter();
 
   const subtotal = cartItems.reduce(
     (sum, item) => sum + item.price * item.quantity,
     0
   );
+
+  const handleCheckout = () => {
+    onClose();
+    router.push('/checkout');
+  };
 
   if (!isOpen) return null;
 
@@ -102,12 +109,12 @@ const Cart = ({ isOpen, onClose }) => {
                       Envío e impuestos se calculan al finalizar la compra.
                     </p>
                     <div className="mt-6">
-                      <a
-                        href="#"
-                        className="flex items-center justify-center rounded-lg border border-transparent bg-stone-800 px-6 py-3 text-base font-medium text-white shadow-sm hover:bg-stone-900 dark:bg-stone-200 dark:text-stone-900 dark:hover:bg-white"
+                      <button
+                        onClick={handleCheckout}
+                        className="flex w-full items-center justify-center rounded-lg border border-transparent bg-stone-800 px-6 py-3 text-base font-medium text-white shadow-sm hover:bg-stone-900 dark:bg-stone-200 dark:text-stone-900 dark:hover:bg-white"
                       >
                         Finalizar Compra
-                      </a>
+                      </button>
                     </div>
                   </div>
                 )}

@@ -44,11 +44,21 @@ export const CartProvider = ({ children }) => {
     }
   };
 
+  const clearCart = () => {
+    setCartItems([]);
+  };
+
+  const getCartTotal = () => {
+    return cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  };
+
   const value = {
     cartItems,
     addToCart,
     removeFromCart,
     updateQuantity,
+    clearCart,
+    getCartTotal,
   };
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;

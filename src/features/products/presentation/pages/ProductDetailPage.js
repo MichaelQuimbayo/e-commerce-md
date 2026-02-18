@@ -5,6 +5,7 @@ import Navbar from '../../../../shared/components/Navbar';
 import Footer from '../../../../shared/components/Footer';
 import ProductCard from '../components/ProductCard';
 import { Plus, Minus, ChevronDown, CheckCircle } from 'lucide-react';
+import { useRouter } from 'next/router';
 
 const RelatedProducts = ({ currentProduct, allProducts }) => {
   const related = allProducts.filter(p => p.category === currentProduct.category && p.id !== currentProduct.id).slice(0, 4);
@@ -23,6 +24,7 @@ const RelatedProducts = ({ currentProduct, allProducts }) => {
 
 export default function ProductDetailPage({ product, allProducts }) {
   const { addToCart } = useCart();
+  const router = useRouter();
   const [selectedColor, setSelectedColor] = useState(product?.colors[0]);
   const [selectedSize, setSelectedSize] = useState(product?.sizes[0]);
   const [selectedImage, setSelectedImage] = useState(() => {
@@ -75,8 +77,11 @@ export default function ProductDetailPage({ product, allProducts }) {
     const colorName = typeof selectedColor === 'object' ? selectedColor.name : selectedColor;
     const productToAdd = { ...product, color: colorName, size: selectedSize, price: parseFloat(product.price.replace('$', '')) };
     addToCart(productToAdd, quantity);
-    if (actionType === 'buy') showMessage(`Redirigiendo a la compra...`);
-    else showMessage(`¡'${product.name}' (${colorName}) añadido al carrito!`);
+    if (actionType === 'buy') {
+      router.push('/checkout');
+    } else {
+      showMessage(`¡'${product.name}' (${colorName}) añadido al carrito!`);
+    }
   };
   
   const showMessage = (message) => {
