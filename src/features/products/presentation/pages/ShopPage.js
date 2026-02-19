@@ -3,9 +3,11 @@ import Navbar from '../../../../shared/components/Navbar';
 import Footer from '../../../../shared/components/Footer';
 import ProductCard from '../components/ProductCard';
 import { Search } from 'lucide-react';
+import { useMaterials } from '../../infrastructure/data/materials';
 
 export default function ShopPage({ products }) {
   const [searchTerm, setSearchTerm] = useState('');
+  const { materials, isLoading, isError } = useMaterials();
 
   const filteredProducts = useMemo(() => {
     if (!searchTerm) {
@@ -66,6 +68,33 @@ export default function ShopPage({ products }) {
               </div>
             )}
           </div>
+
+          {/* --- NEW SECTION FOR MATERIALS --- */}
+          <div className="mt-20">
+            <h2 className="font-serif text-3xl font-bold tracking-tight text-stone-900 dark:text-white text-center">
+              Nuestros Materiales
+            </h2>
+            <div className="mt-12">
+              {isLoading && <p className="text-center text-stone-500">Cargando materiales...</p>}
+              {isError && <p className="text-center text-red-500">Error al cargar los materiales.</p>}
+              {materials && (
+                <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+                  {materials.map(material => {
+                    const name = material.descriptions?.find(d => d.lang === 'es')?.value || material.descriptions?.[0]?.value || 'Nombre no disponible';
+                    const imageUrl = material.resources?.find(r => r.content_type?.startsWith('image/'))?.url || 'https://via.placeholder.com/150';
+                    return (
+                      <div key={material.id} className="text-center">
+                        <img src={imageUrl} alt={name} className="w-24 h-24 mx-auto rounded-lg object-cover bg-stone-200" />
+                        <p className="mt-2 text-sm font-medium text-stone-900 dark:text-white">{name}</p>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+          {/* --- END OF NEW SECTION --- */}
+
         </div>
       </main>
       <Footer />

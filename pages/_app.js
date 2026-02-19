@@ -3,6 +3,8 @@ import { ThemeProvider } from 'next-themes';
 import { CartProvider } from '../src/shared/context/CartContext';
 import { FavoritesProvider } from '../src/shared/context/FavoritesContext'; // <-- Importamos el nuevo provider
 import { Inter, Lora } from 'next/font/google';
+import { SWRConfig } from 'swr';
+import { fetcher } from '../src/shared/lib/api';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -16,15 +18,17 @@ const lora = Lora({
 
 function MyApp({ Component, pageProps }) {
   return (
-    <ThemeProvider attribute="class" defaultTheme="light">
-      <CartProvider>
-        <FavoritesProvider> {/* <-- Lo envolvemos aquí */}
-          <main className={`${inter.variable} ${lora.variable} font-sans`}>
-            <Component {...pageProps} />
-          </main>
-        </FavoritesProvider>
-      </CartProvider>
-    </ThemeProvider>
+    <SWRConfig value={{ fetcher }}>
+      <ThemeProvider attribute="class" defaultTheme="light">
+        <CartProvider>
+          <FavoritesProvider> {/* <-- Lo envolvemos aquí */}
+            <main className={`${inter.variable} ${lora.variable} font-sans`}>
+              <Component {...pageProps} />
+            </main>
+          </FavoritesProvider>
+        </CartProvider>
+      </ThemeProvider>
+    </SWRConfig>
   );
 }
 
