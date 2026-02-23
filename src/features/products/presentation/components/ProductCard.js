@@ -22,8 +22,9 @@ const StarRating = ({ rating }) => (
 const ProductCard = ({ product }) => {
   const { isFavorite, toggleFavorite } = useFavorites();
   
-  const price = parseFloat(product.price.replace('$', ''));
-  const originalPrice = product.originalPrice ? parseFloat(product.originalPrice.replace('$', '')) : null;
+  // The component now expects pre-formatted price strings.
+  // const price = parseFloat(product.price.replace('$', ''));
+  // const originalPrice = product.originalPrice ? parseFloat(product.originalPrice.replace('$', '')) : null;
   const isSoldOut = product.status === 'sold-out';
 
   // --- LÓGICA MEJORADA PARA ENCONTRAR LA IMAGEN ---
@@ -42,9 +43,11 @@ const ProductCard = ({ product }) => {
   if (isSoldOut) {
     badgeText = 'Agotado';
     badgeColor = 'bg-stone-500';
-  } else if (originalPrice) {
-    const discountPercentage = Math.round(((originalPrice - price) / originalPrice) * 100);
-    badgeText = `${discountPercentage}% OFF`;
+  } else if (product.originalPrice) {
+    // Discount logic is temporarily commented out as it requires raw numbers, not formatted strings.
+    // A future refactor could pass raw price numbers to this component if this logic is needed.
+    // const discountPercentage = Math.round(((originalPrice - price) / originalPrice) * 100);
+    // badgeText = `${discountPercentage}% OFF`;
   }
 
   const handleFavoriteClick = (e) => {
@@ -78,7 +81,7 @@ const ProductCard = ({ product }) => {
         <img
           src={displayImage} // <-- Usamos la imagen correcta
           alt={product.name}
-          className={`w-full h-full object-center object-contain ${!isSoldOut && 'group-hover:scale-105 transition-transform duration-300'}`}
+          className={`w-full h-full object-center object-cover ${!isSoldOut && 'group-hover:scale-105 transition-transform duration-300'}`}
         />
       </div>
       <div className="p-4 flex flex-col flex-grow">
@@ -86,20 +89,24 @@ const ProductCard = ({ product }) => {
           {product.name}
         </h3>
         
+        {/*
         {product.rating && !isSoldOut && (
           <div className="mt-1 mb-2">
             <StarRating rating={product.rating} />
           </div>
         )}
+        */}
 
         <div className="flex-grow">
-          {originalPrice && !isSoldOut && (
+          {/*
+          {product.originalPrice && !isSoldOut && (
             <p className="text-sm sm:text-base text-stone-500 dark:text-stone-400 line-through">
-              ${originalPrice.toFixed(2)}
+              {product.originalPrice}
             </p>
           )}
+          */}
           <p className="text-2xl sm:text-3xl font-semibold text-stone-900 dark:text-white">
-            ${price.toFixed(2)}
+            {product.price}
           </p>
         </div>
         {!isSoldOut && (

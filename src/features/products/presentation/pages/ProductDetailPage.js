@@ -75,7 +75,7 @@ export default function ProductDetailPage({ product, allProducts }) {
   const handleAction = (e, actionType) => {
     e.preventDefault();
     const colorName = typeof selectedColor === 'object' ? selectedColor.name : selectedColor;
-    const productToAdd = { ...product, color: colorName, size: selectedSize, price: parseFloat(product.price.replace('$', '')) };
+    const productToAdd = { ...product, color: colorName, size: selectedSize, price: product.price };
     addToCart(productToAdd, quantity);
     if (actionType === 'buy') {
       router.push('/checkout');

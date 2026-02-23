@@ -1,48 +1,48 @@
-// pages/product/[slug].js
 import ProductDetailPage from '../../src/features/products/presentation/pages/ProductDetailPage';
+import { ProductEntity } from '../../src/features/products/domain/entities/ProductEntity';
+
+// TODO: This should be updated to fetch all products from the real API for the related products section
 import { InMemoryProductRepository } from '../../src/features/products/infrastructure/repositories/InMemoryProductRepository';
-// Ya no necesitamos GetProductBySlug, usaremos GetProductById que es más eficiente
-import { GetProductById } from '../../src/features/products/application/useCases/GetProductById';
 import { GetAllProducts } from '../../src/features/products/application/useCases/GetAllProducts';
 
 export default ProductDetailPage;
 
 export async function getServerSideProps(context) {
-  const { slug } = context.params; // slug será, por ej: "camiseta-seleccion-colombia-2024-1"
-  
-  // --- LÓGICA DE EXTRACCIÓN DEL ID ---
-  const id = slug.split('-').pop();
+  const { slug } = context.params;
+  const id = slug.slice(-36);
 
-  // Si el ID no es un número válido, la URL es incorrecta.
-  if (isNaN(id)) {
+  if (!id) {
     return { notFound: true };
   }
 
+  // --- MOCK DATA GENERATION ---
+  // Since the single product endpoint doesn't exist yet, we create a placeholder product.
+  // This allows the detail page to render without errors.
+  // Once the endpoint is ready, this block can be replaced with the real API call and mapping.
+  const mockProduct = new ProductEntity({
+    id: id,
+    name: `Producto de Prueba (${slug.split('-').slice(0, -5).join(' ')})`,
+    slug: slug,
+    price: 99999,
+    description: 'Esta es una descripción de prueba para un producto que se cargará desde la API cuando el endpoint esté listo.',
+    imageUrl: 'https://via.placeholder.com/400',
+    status: 'available',
+    stock: 10,
+    rating: 4,
+    category: 'Pruebas',
+    colors: [],
+    sizes: ['S', 'M', 'L'],
+  });
+
+  // --- TODO: This `allProducts` logic should also be updated to use the real API ---
   const productRepository = new InMemoryProductRepository();
-  const getProductById = new GetProductById(productRepository); // <-- Usamos GetProductById
   const getAllProducts = new GetAllProducts(productRepository);
-
-  const product = await getProductById.execute(id); // <-- Buscamos por ID
   const allProducts = await getAllProducts.execute();
-
-  // Redirección SEO: Si el slug de la URL no coincide con el slug del producto encontrado,
-  // hacemos una redirección 301 a la URL correcta.
-  if (product && slug !== `${product.slug}-${product.id}`) {
-    return {
-      redirect: {
-        destination: `/product/${product.slug}-${product.id}`,
-        permanent: true,
-      },
-    };
-  }
-
-  if (!product) {
-    return { notFound: true };
-  }
 
   return {
     props: {
-      product,
+      // Convert the class instance to a plain object for Next.js serialization
+      product: JSON.parse(JSON.stringify(mockProduct)),
       allProducts,
     },
   };

@@ -5,8 +5,9 @@ import Footer from '../../../../shared/components/Footer';
 import ProductCard from '../components/ProductCard';
 import TestimonialsSection from '../../../testimonials/presentation/components/TestimonialsSection';
 import GuaranteesSection from '../../../../shared/components/GuaranteesSection';
+import { useProducts } from '../../infrastructure/data/useProducts';
 
-const PRODUCT_LIMIT = 12; // Límite de productos a mostrar en la home
+const PRODUCT_LIMIT = 12;
 
 const HeroSection = () => (
   <div className="relative h-[60vh] min-h-[400px] flex items-center justify-center text-center text-white">
@@ -49,8 +50,10 @@ const BenefitsSection = () => (
   </div>
 );
 
-export default function HomePage({ products, testimonials }) {
-  const displayedProducts = products.slice(0, PRODUCT_LIMIT);
+export default function HomePage({ testimonials }) {
+  const { products, isLoading } = useProducts();
+
+  const displayedProducts = products ? products.slice(0, PRODUCT_LIMIT) : [];
 
   return (
     <>
@@ -60,12 +63,25 @@ export default function HomePage({ products, testimonials }) {
         <div className="bg-stone-50 dark:bg-gray-900 py-16 sm:py-20">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <h2 className="text-2xl font-bold tracking-tight text-stone-900 dark:text-white">Para ti</h2>
+
+            {isLoading && <p className="text-center mt-6 text-stone-500">Cargando productos...</p>}
+
             <div className="mt-6 grid grid-cols-2 gap-2 sm:gap-4 lg:gap-6 sm:grid-cols-2 lg:grid-cols-4">
               {displayedProducts.map((product) => (
-                <ProductCard key={product.id} product={product} />
+                <ProductCard key={product.id} product={{
+                  id: product.id,
+                  name: product.name,
+                  price: product.displayPrice, // Using the clean getter from our entity
+                  originalPrice: product.displayOriginalPrice,
+                  image: product.primaryImage, // Use primaryImage getter
+                  slug: product.productSlug,   // Use productSlug getter
+                  status: product.status,
+                  rating: product.rating,
+                }} />
               ))}
             </div>
-            {products.length > PRODUCT_LIMIT && (
+
+            {products && products.length > PRODUCT_LIMIT && (
               <div className="mt-12 text-center">
                 <Link href="/shop" className="inline-block bg-blue-600 text-white font-semibold px-8 py-3 rounded-lg hover:bg-blue-700 transition-colors">
                   Ver más productos
@@ -74,7 +90,7 @@ export default function HomePage({ products, testimonials }) {
             )}
           </div>
         </div>
-        
+
         <GuaranteesSection />
         <TestimonialsSection testimonials={testimonials} />
 
