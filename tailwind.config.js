@@ -29,6 +29,9 @@ module.exports = {
         sans: ['var(--font-sans)', ...fontFamily.sans],
         serif: ['var(--font-serif)', ...fontFamily.serif],
       },
+      maxWidth: {
+        '8xl': '90rem', // 1440px
+      },
     },
   },
   plugins: [],

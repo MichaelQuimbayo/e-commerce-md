@@ -40,17 +40,14 @@ const TestimonialsSection = ({ testimonials }) => {
   }, [testimonials]);
 
   return (
-    <div className="bg-stone-50 dark:bg-gray-900 py-16 sm:py-20">
-      <div className="max-w-7xl mx-auto">
+    <div className="py-16 sm:py-20  dark:bg-gray-900" > {/* Removed bg-stone-50 dark:bg-gray-900 */}
+      <div className="max-w-8xl mx-auto bg-stone-50 border-2 rounded-2xl">
         <div className="max-w-2xl mx-auto text-center px-4 sm:px-6 lg:px-8">
-          <h2 className="font-serif text-3xl font-bold tracking-tight text-stone-900 dark:text-white sm:text-4xl">
+          <h2 className="font-serif text-3xl mt-6 MT font-bold tracking-tight text-stone-900 dark:text-white sm:text-4xl">
             Lo que dicen nuestros Clientes
           </h2>
-          <p className="mt-6 text-lg leading-8 text-stone-600 dark:text-stone-400">
-
-          </p>
         </div>
-        <div className="relative mt-16">
+        <div className="relative">
           <div className="absolute inset-y-0 left-0 flex items-center z-10">
             <button
               onClick={() => scroll('left')}
@@ -64,7 +61,7 @@ const TestimonialsSection = ({ testimonials }) => {
 
           <div
             ref={scrollContainer}
-            className="flex overflow-x-auto space-x-8 py-8 scrollbar-hide px-4 sm:px-6 lg:px-8" // <-- CORRECCIÓN AQUÍ
+            className="flex overflow-x-auto space-x-8 py-8 scrollbar-hide px-4 sm:px-6 lg:px-8"
           >
             {testimonials.map((testimonial) => (
               <TestimonialCard key={testimonial.id} testimonial={testimonial} />

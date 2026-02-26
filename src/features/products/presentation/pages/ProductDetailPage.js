@@ -1,20 +1,26 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import Head from 'next/head';
 import { useCart } from '../../../../shared/context/CartContext';
 import Navbar from '../../../../shared/components/Navbar';
 import Footer from '../../../../shared/components/Footer';
 import ProductCard from '../components/ProductCard';
 import { Plus, Minus, ChevronDown, CheckCircle } from 'lucide-react';
-import { useRouter } from 'next/router';
+import { useRouter }from 'next/router';
+import ModelingCarousel from '../components/ModelingCarousel';
+import { ProductEntity } from '../../domain/entities/ProductEntity';
 
 const RelatedProducts = ({ currentProduct, allProducts }) => {
   const related = allProducts.filter(p => p.category === currentProduct.category && p.id !== currentProduct.id).slice(0, 4);
   if (related.length === 0) return null;
+
+  // Ensure related products are also entities to use getters
+  const relatedProductEntities = related.map(p => new ProductEntity(p));
+
   return (
     <div className="mt-24">
       <h2 className="font-serif text-2xl font-bold tracking-tight text-stone-900 dark:text-white">También te podría interesar</h2>
-      <div className="mt-6 grid grid-cols-2 gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-4 xl:gap-x-8">
-        {related.map((product) => (
+      <div className="mt-6 grid grid-cols-2 gap-x-8 lg:gap-x-16">
+        {relatedProductEntities.map((product) => (
           <ProductCard key={product.id} product={product} />
         ))}
       </div>
@@ -22,16 +28,15 @@ const RelatedProducts = ({ currentProduct, allProducts }) => {
   );
 };
 
-export default function ProductDetailPage({ product, allProducts }) {
+export default function ProductDetailPage({ product: productProps, allProducts }) {
+  // Re-hydrate the ProductEntity to have access to its getters
+  const product = useMemo(() => productProps ? new ProductEntity(productProps) : null, [productProps]);
+
   const { addToCart } = useCart();
   const router = useRouter();
   const [selectedColor, setSelectedColor] = useState(product?.colors[0]);
   const [selectedSize, setSelectedSize] = useState(product?.sizes[0]);
-  const [selectedImage, setSelectedImage] = useState(() => {
-    const firstColor = product?.colors[0];
-    if (typeof firstColor === 'object' && firstColor.images) return firstColor.images[0];
-    return product?.image || (product?.images ? product.images[0] : '');
-  });
+  const [selectedImage, setSelectedImage] = useState(product?.primaryImage);
   const [quantity, setQuantity] = useState(1);
   const [addedToCartMessage, setAddedToCartMessage] = useState('');
   const [activeImageIndex, setActiveImageIndex] = useState(0);
@@ -51,11 +56,9 @@ export default function ProductDetailPage({ product, allProducts }) {
 
   useEffect(() => {
     if (product) {
-      const initialColor = product.colors[0];
-      setSelectedColor(initialColor);
+      setSelectedColor(product.colors[0]);
       setSelectedSize(product.sizes[0]);
-      const initialImage = (typeof initialColor === 'object' && initialColor.images) ? initialColor.images[0] : (product.image || product.images?.[0]);
-      setSelectedImage(initialImage);
+      setSelectedImage(product.primaryImage);
       setActiveImageIndex(0);
     }
   }, [product]);
@@ -75,7 +78,8 @@ export default function ProductDetailPage({ product, allProducts }) {
   const handleAction = (e, actionType) => {
     e.preventDefault();
     const colorName = typeof selectedColor === 'object' ? selectedColor.name : selectedColor;
-    const productToAdd = { ...product, color: colorName, size: selectedSize, price: product.price };
+    // Important: Pass the original plain object to the cart, not the entity instance
+    const productToAdd = { ...productProps, color: colorName, size: selectedSize, price: product.price };
     addToCart(productToAdd, quantity);
     if (actionType === 'buy') {
       router.push('/checkout');
@@ -93,10 +97,10 @@ export default function ProductDetailPage({ product, allProducts }) {
     <>
       <Head><title>{pageTitle}</title></Head>
       <Navbar />
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+      <main className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-16 bg-white">
         <div className="grid md:grid-cols-2 gap-x-8 lg:gap-x-16">
           <div>
-            <div className="md:hidden relative">
+            <div className="md:hidden relative border-2">
               <div ref={scrollRef} className="flex overflow-x-auto snap-x snap-mandatory scrollbar-hide rounded-lg">
                 {currentImages.map((image, index) => (
                   <div key={index} className="w-full flex-shrink-0 snap-center">
@@ -113,7 +117,7 @@ export default function ProductDetailPage({ product, allProducts }) {
               )}
             </div>
             <div className="hidden md:block">
-              <div className="aspect-square w-full overflow-hidden rounded-lg bg-stone-200">
+              <div className="aspect-square w-full overflow-hidden rounded-lg  border-2 bg-stone-200">
                 <img src={selectedImage} alt={`${product.name} - ${typeof selectedColor === 'object' ? selectedColor.name : selectedColor}`} className="w-full h-full object-contain" />
               </div>
               <div className="mt-4">
@@ -129,7 +133,7 @@ export default function ProductDetailPage({ product, allProducts }) {
           </div>
           <div className="mt-8 md:mt-0">
             <h1 className="font-serif text-4xl sm:text-5xl font-medium tracking-tight">{product.name}</h1>
-            <p className="text-2xl mt-4">{product.price}</p>
+            <p className="text-2xl mt-4">{product.displayPrice}</p> {/* <-- Use the getter here */}
             <form className="mt-10">
               <div>
                 <h3 className="text-sm font-medium">Color: <span className="font-semibold">{typeof selectedColor === 'object' ? selectedColor.name : selectedColor}</span></h3>
@@ -147,6 +151,10 @@ export default function ProductDetailPage({ product, allProducts }) {
                 <h3 className="text-sm font-medium">Talla: <span className="font-semibold">{selectedSize}</span></h3>
                 <div className="flex flex-wrap gap-2 mt-3">
                   {product.sizes.map((size) => <button key={size} type="button" onClick={() => setSelectedSize(size)} className={`border rounded-lg py-2 px-4 text-sm font-medium transition-colors ${selectedSize === size ? 'bg-stone-900 text-white dark:bg-stone-200 dark:text-stone-900 border-stone-900 dark:border-stone-200' : 'border-stone-300 hover:bg-stone-100 dark:border-stone-600 dark:hover:bg-stone-800'}`}>{size}</button>)}
+                </div>
+                {/* Add the 'Disponible:' text here */}
+                <div className="mt-4">
+                  <p className="text-sm font-medium text-gray-900">Disponible:</p>
                 </div>
               </div>
               <div className="mt-8">

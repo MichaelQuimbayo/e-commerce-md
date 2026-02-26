@@ -1,7 +1,7 @@
 import '../src/index.css';
 import { ThemeProvider } from 'next-themes';
 import { CartProvider } from '../src/shared/context/CartContext';
-import { FavoritesProvider } from '../src/shared/context/FavoritesContext'; // <-- Importamos el nuevo provider
+import { FavoritesProvider } from '../src/shared/context/FavoritesContext';
 import { Inter, Lora } from 'next/font/google';
 import { SWRConfig } from 'swr';
 import { fetcher } from '../src/shared/lib/api';
@@ -21,10 +21,13 @@ function MyApp({ Component, pageProps }) {
     <SWRConfig value={{ fetcher }}>
       <ThemeProvider attribute="class" defaultTheme="light">
         <CartProvider>
-          <FavoritesProvider> {/* <-- Lo envolvemos aquí */}
-            <main className={`${inter.variable} ${lora.variable} font-sans`}>
-              <Component {...pageProps} />
-            </main>
+          <FavoritesProvider>
+            {/* Wrap the main content with a div for global background */}
+            <div className="bg-stone-100 min-h-screen">
+              <main className={`${inter.variable} ${lora.variable} font-sans`}>
+                <Component {...pageProps} />
+              </main>
+            </div>
           </FavoritesProvider>
         </CartProvider>
       </ThemeProvider>

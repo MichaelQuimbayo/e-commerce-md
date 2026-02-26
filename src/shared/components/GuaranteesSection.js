@@ -21,9 +21,9 @@ const guarantees = [
 
 const GuaranteesSection = () => {
   return (
-    <div className="bg-stone-50 dark:bg-gray-900 py-12 sm:py-12">
-      <div className="max-w-7xl mx-auto px-6 lg:px-8">
-        <div className="grid grid-cols-1 gap-8 text-center lg:grid-cols-3">
+    <div className="bg-gray-100 dark:bg-gray-900 py-12 sm:py-12 ">
+      <div className="max-w-8xl mx-auto px-6">
+        <div className="grid grid-cols-1 gap-8 text-center lg:grid-cols-3 ">
           {guarantees.map((guarantee) => (
             <div 
               key={guarantee.name} 

@@ -6,11 +6,12 @@ import ProductCard from '../components/ProductCard';
 import TestimonialsSection from '../../../testimonials/presentation/components/TestimonialsSection';
 import GuaranteesSection from '../../../../shared/components/GuaranteesSection';
 import { useProducts } from '../../infrastructure/data/useProducts';
+import ModelingCarousel from '../components/ModelingCarousel'; // Import the ModelingCarousel
 
 const PRODUCT_LIMIT = 12;
 
 const HeroSection = () => (
-  <div className="relative h-[60vh] min-h-[400px] flex items-center justify-center text-center text-white">
+  <div className="relative h-[80vh] min-h-[400px] flex items-center justify-center text-center text-white">
     <div className="absolute inset-0">
       <img
         className="w-full h-full object-cover"
@@ -36,8 +37,8 @@ const HeroSection = () => (
 );
 
 const BenefitsSection = () => (
-  <div className="bg-stone-100 dark:bg-gray-800 py-24 sm:py-32">
-    <div className="max-w-7xl mx-auto px-6 lg:px-8">
+  <div className="py-24 sm:py-32"> {/* Removed background color */}
+    <div className="max-w-8xl mx-auto px-6 lg:px-8">
       <div className="max-w-2xl mx-auto lg:text-center">
         <h2 className="font-serif text-3xl font-bold tracking-tight text-stone-900 dark:text-white sm:text-4xl">
           Diseñado para el Movimiento
@@ -50,8 +51,10 @@ const BenefitsSection = () => (
   </div>
 );
 
-export default function HomePage({ testimonials }) {
-  const { products, isLoading } = useProducts();
+export default function HomePage({ testimonials, products: serverProducts }) {
+  const { products: clientProducts, isLoading } = useProducts();
+  
+  const products = clientProducts && clientProducts.length > 0 ? clientProducts : serverProducts;
 
   const displayedProducts = products ? products.slice(0, PRODUCT_LIMIT) : [];
 
@@ -60,8 +63,8 @@ export default function HomePage({ testimonials }) {
       <Navbar />
       <main>
         <HeroSection />
-        <div className="bg-stone-50 dark:bg-gray-900 py-16 sm:py-20">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="bg-gray-100 dark:bg-gray-900 py-16 sm:py-20">
+          <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8">
             <h2 className="text-2xl font-bold tracking-tight text-stone-900 dark:text-white">Para ti</h2>
 
             {isLoading && <p className="text-center mt-6 text-stone-500">Cargando productos...</p>}
@@ -89,12 +92,14 @@ export default function HomePage({ testimonials }) {
               </div>
             )}
           </div>
+          <GuaranteesSection />
+          <ModelingCarousel products={products} />
+          <TestimonialsSection testimonials={testimonials} />
+
+          <BenefitsSection />
         </div>
 
-        <GuaranteesSection />
-        <TestimonialsSection testimonials={testimonials} />
 
-        <BenefitsSection />
       </main>
       <Footer />
     </>
