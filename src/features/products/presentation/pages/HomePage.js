@@ -6,7 +6,7 @@ import ProductCard from '../components/ProductCard';
 import TestimonialsSection from '../../../testimonials/presentation/components/TestimonialsSection';
 import GuaranteesSection from '../../../../shared/components/GuaranteesSection';
 import { useProducts } from '../../infrastructure/data/useProducts';
-import ModelingCarousel from '../components/ModelingCarousel'; // Import the ModelingCarousel
+import ModelingCarousel from '../components/ModelingCarousel';
 
 const PRODUCT_LIMIT = 12;
 
@@ -37,7 +37,7 @@ const HeroSection = () => (
 );
 
 const BenefitsSection = () => (
-  <div className="py-24 sm:py-32"> {/* Removed background color */}
+  <div className="py-24 sm:py-32">
     <div className="max-w-8xl mx-auto px-6 lg:px-8">
       <div className="max-w-2xl mx-auto lg:text-center">
         <h2 className="font-serif text-3xl font-bold tracking-tight text-stone-900 dark:text-white sm:text-4xl">
@@ -51,40 +51,38 @@ const BenefitsSection = () => (
   </div>
 );
 
-export default function HomePage({ testimonials, products: serverProducts }) {
-  const { products: clientProducts, isLoading } = useProducts();
+export default function HomePage({ testimonials, products: serverProductGroups }) {
+  const { products: clientProductGroups, isLoading } = useProducts();
   
-  const products = clientProducts && clientProducts.length > 0 ? clientProducts : serverProducts;
+  // Prioritize client-side data if available, otherwise use server-side data
+  const productGroups = clientProductGroups && clientProductGroups.length > 0 
+    ? clientProductGroups 
+    : serverProductGroups;
 
-  const displayedProducts = products ? products.slice(0, PRODUCT_LIMIT) : [];
+  const displayedProductGroups = productGroups 
+    ? productGroups.slice(0, PRODUCT_LIMIT)
+    : [];
 
   return (
     <>
       <Navbar />
       <main>
         <HeroSection />
-        <div className="bg-gray-100 dark:bg-gray-900 py-16 sm:py-20">
+        <div className="py-16 sm:py-20">
           <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8">
             <h2 className="text-2xl font-bold tracking-tight text-stone-900 dark:text-white">Para ti</h2>
 
             {isLoading && <p className="text-center mt-6 text-stone-500">Cargando productos...</p>}
 
             <div className="mt-6 grid grid-cols-2 gap-2 sm:gap-4 lg:gap-6 sm:grid-cols-2 lg:grid-cols-4">
-              {displayedProducts.map((product) => (
-                <ProductCard key={product.id} product={{
-                  id: product.id,
-                  name: product.name,
-                  price: product.displayPrice, // Using the clean getter from our entity
-                  originalPrice: product.displayOriginalPrice,
-                  image: product.primaryImage, // Use primaryImage getter
-                  slug: product.productSlug,   // Use productSlug getter
-                  status: product.status,
-                  rating: product.rating,
-                }} />
-              ))}
+              {displayedProductGroups
+                .filter(Boolean) // Filter out any null/undefined groups for robustness
+                .map((group) => (
+                  <ProductCard key={group.groupCode} group={group} />
+                ))}
             </div>
 
-            {products && products.length > PRODUCT_LIMIT && (
+            {productGroups && productGroups.length > PRODUCT_LIMIT && (
               <div className="mt-12 text-center">
                 <Link href="/shop" className="inline-block bg-blue-600 text-white font-semibold px-8 py-3 rounded-lg hover:bg-blue-700 transition-colors">
                   Ver más productos
@@ -93,7 +91,7 @@ export default function HomePage({ testimonials, products: serverProducts }) {
             )}
           </div>
           <GuaranteesSection />
-          <ModelingCarousel products={products} />
+          <ModelingCarousel products={productGroups} /> {/* Pass grouped products to carousel */}
           <TestimonialsSection testimonials={testimonials} />
 
           <BenefitsSection />

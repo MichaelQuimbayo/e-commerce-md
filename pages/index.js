@@ -10,20 +10,20 @@ import { GetAllTestimonials } from '../src/features/testimonials/application/use
 export default HomePage;
 
 export async function getServerSideProps() {
-  // Obtenemos los productos
+  // Obtenemos los productos (ya agrupados por el repositorio)
   const productRepository = new InMemoryProductRepository();
   const getAllProducts = new GetAllProducts(productRepository);
-  const products = await getAllProducts.execute();
+  const products = await getAllProducts.execute(); // 'products' here are GroupedProduct[]
 
-  // Obtenemos los testimonios
+  // Obtenemos los testimonios (asumiendo que testimonialRepository también devuelve instancias de clase)
   const testimonialRepository = new InMemoryTestimonialRepository();
   const getAllTestimonials = new GetAllTestimonials(testimonialRepository);
   const testimonials = await getAllTestimonials.execute();
 
   return {
     props: {
-      products,
-      testimonials, // Pasamos los testimonios como props
+      products: JSON.parse(JSON.stringify(products)), // Aplicar serialización a los productos agrupados
+      testimonials: JSON.parse(JSON.stringify(testimonials)), // Aplicar serialización a los testimonios
     },
   };
 }

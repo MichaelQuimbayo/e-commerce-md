@@ -1,67 +1,50 @@
 import React from 'react';
 import Link from 'next/link';
-import { Truck, Heart, Star } from 'lucide-react';
+import { Truck, Heart } from 'lucide-react';
 import { useFavorites } from '../../../../shared/context/FavoritesContext';
 
-const StarRating = ({ rating }) => (
-  <div className="flex items-center">
-    {[...Array(5)].map((_, index) => (
-      <Star
-        key={index}
-        size={16}
-        className={
-          index < rating
-            ? 'text-yellow-400 fill-current'
-            : 'text-stone-300 dark:text-stone-600 fill-current'
-        }
-      />
-    ))}
-  </div>
-);
+// A helper function to format the price range
+const formatPriceRange = (priceRange) => {
+  if (!priceRange) return '';
+  if (priceRange.min === priceRange.max) {
+    return `$${priceRange.min.toLocaleString('es-CO')}`;
+  }
+  return `$${priceRange.min.toLocaleString('es-CO')} - $${priceRange.max.toLocaleString('es-CO')}`;
+};
 
-const ProductCard = ({ product }) => {
+/**
+ * A card component that displays a grouped product.
+ * @param {{ group: import('../../application/services/productGrouping').GroupedProduct }} props
+ */
+const ProductCard = ({ group }) => {
+  // --- FORTIFICACIÓN: Guard Clause --- //
+  if (!group || !group.variants || group.variants.length === 0) {
+    console.warn("ProductCard received invalid group prop:", group);
+    return null; 
+  }
+  // --- FIN FORTIFICACIÓN --- //
+
   const { isFavorite, toggleFavorite } = useFavorites();
-  
-  // The component now expects pre-formatted price strings.
-  // const price = parseFloat(product.price.replace('$', ''));
-  // const originalPrice = product.originalPrice ? parseFloat(product.originalPrice.replace('$', '')) : null;
-  const isSoldOut = product.status === 'sold-out';
 
-  // --- LÓGICA MEJORADA PARA ENCONTRAR LA IMAGEN ---
-  let displayImage = '';
-  if (product.colors && typeof product.colors[0] === 'object' && product.colors[0].images) {
-    displayImage = product.colors[0].images[0];
-  } else if (product.images && product.images.length > 0) {
-    displayImage = product.images[0];
-  } else {
-    displayImage = product.image;
-  }
+  // A group is considered out of stock only if all its variants are.
+  const isSoldOut = group.variants.every(v => v.status === 'sold-out');
+  const firstVariant = group.variants[0];
 
-  let badgeText = product.badge;
-  let badgeColor = 'bg-blue-600';
-
-  if (isSoldOut) {
-    badgeText = 'Agotado';
-    badgeColor = 'bg-stone-500';
-  } else if (product.originalPrice) {
-    // Discount logic is temporarily commented out as it requires raw numbers, not formatted strings.
-    // A future refactor could pass raw price numbers to this component if this logic is needed.
-    // const discountPercentage = Math.round(((originalPrice - price) / originalPrice) * 100);
-    // badgeText = `${discountPercentage}% OFF`;
-  }
+  // firstVariant is guaranteed to exist due to the guard clause, but still good to be explicit
 
   const handleFavoriteClick = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    toggleFavorite(product.id);
+    // Use the groupCode for favorites, as it's the unique identifier for the group
+    toggleFavorite(group.groupCode);
   };
 
   const cardContent = (
     <div className={`group flex flex-col h-full bg-white dark:bg-stone-800 rounded-lg border border-stone-200 dark:border-stone-700 overflow-hidden transition-all duration-300 ${isSoldOut ? 'opacity-50 grayscale' : 'hover:shadow-lg'}`}>
       <div className="relative w-full h-64 sm:h-80 bg-stone-200 overflow-hidden">
-        {badgeText && (
-          <div className={`absolute top-3 left-3 z-10 ${badgeColor} text-white text-sm font-semibold px-3 py-1.5 rounded-full`}>
-            {badgeText}
+        {isSoldOut && (
+          <div className={`absolute top-3 left-3 z-10 bg-stone-500 text-white text-sm font-semibold px-3 py-1.5 rounded-full`}>
+            Agotado
           </div>
         )}
         
@@ -72,41 +55,26 @@ const ProductCard = ({ product }) => {
             aria-label="Añadir a favoritos"
           >
             <Heart 
-              className={`transition-colors ${isFavorite(product.id) ? 'text-red-500 fill-current' : 'text-stone-700 dark:text-stone-300'}`} 
+              className={`transition-colors ${isFavorite(group.groupCode) ? 'text-red-500 fill-current' : 'text-stone-700 dark:text-stone-300'}`} 
               size={20} 
             />
           </button>
         )}
 
         <img
-          src={displayImage} // <-- Usamos la imagen correcta
-          alt={product.name}
+          src={group.mainImage || 'https://via.placeholder.com/400'} 
+          alt={group.name}
           className={`w-full h-full object-center object-cover ${!isSoldOut && 'group-hover:scale-105 transition-transform duration-300'}`}
         />
       </div>
       <div className="p-4 flex flex-col flex-grow">
         <h3 className="text-sm sm:text-base font-medium text-stone-800 dark:text-stone-200 min-h-[2.5rem] sm:min-h-[3rem]">
-          {product.name}
+          {group.name}
         </h3>
         
-        {/*
-        {product.rating && !isSoldOut && (
-          <div className="mt-1 mb-2">
-            <StarRating rating={product.rating} />
-          </div>
-        )}
-        */}
-
         <div className="flex-grow">
-          {/*
-          {product.originalPrice && !isSoldOut && (
-            <p className="text-sm sm:text-base text-stone-500 dark:text-stone-400 line-through">
-              {product.originalPrice}
-            </p>
-          )}
-          */}
-          <p className="text-2xl sm:text-3xl font-semibold text-stone-900 dark:text-white">
-            {product.price}
+          <p className="text-xl sm:text-2xl font-semibold text-stone-900 dark:text-white">
+            {formatPriceRange(group.priceRange)}
           </p>
         </div>
         {!isSoldOut && (
@@ -119,12 +87,10 @@ const ProductCard = ({ product }) => {
     </div>
   );
 
-  if (isSoldOut) {
-    return <div className="pointer-events-none h-full">{cardContent}</div>;
-  }
-
+  // The card links to the detail page of the first variant
+  // Ensure firstVariant has id and slug, which it should due to the guard clause.
   return (
-    <Link href={`/product/${product.slug}-${product.id}`} className="h-full">
+    <Link href={`/product/${firstVariant.productSlug}-${firstVariant.id}`} className="h-full">
       {cardContent}
     </Link>
   );

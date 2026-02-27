@@ -15,4 +15,8 @@ export class IProductRepository {
   async getProductsByCategory(categorySlug) {
     throw new Error("Método 'getProductsByCategory(categorySlug)' no implementado.");
   }
+
+  async getProductsByGroup(groupCode) {
+    throw new Error("Método 'getProductsByGroup(groupCode)' no implementado.");
+  }
 }

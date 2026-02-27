@@ -1,14 +1,13 @@
 import useSWR from 'swr';
 import { useMemo } from 'react';
-import { toMaterial } from '../../domain/entities/Material.es'; // The raw parser for Material
-import { toDomain as productMapper } from '../mappers/ProductMapper'; // Our new mapper for ProductEntity
+import { toDomain as productMapper } from '../mappers/ProductMapper';
+import { groupProducts } from '../../application/services/productGrouping';
 
 const API_URL = 'https://us-central1-toolx-cloud-pos.cloudfunctions.net/api/v1/workspaces/av_store/materials';
 
 /**
- * Custom hook to fetch product data using SWR.
- * It fetches raw data, parses it, and maps it to clean ProductEntity domain objects.
- * @returns {{products: ProductEntity[] | null, isLoading: boolean, isError: any}}
+ * Custom hook to fetch, parse, map, and group product data.
+ * @returns {{products: import('../../application/services/productGrouping').GroupedProduct[] | null, isLoading: boolean, isError: any}}
  */
 export const useProducts = () => {
     const { data: rawApiData, error } = useSWR(API_URL);
@@ -16,27 +15,29 @@ export const useProducts = () => {
     const products = useMemo(() => {
         if (!rawApiData) return null;
         try {
-            // 1. Parse raw API response using the auto-generated parser
-            // Assuming `toMaterial` processes an array of raw material objects.
-            const parsedRawMaterials = toMaterial(JSON.stringify(rawApiData));
+            // As the API response is directly an array of raw materials, we can use it directly.
+            // No need for a separate `toMaterial` parsing step if `rawApiData` is already the array.
+            const rawMaterials = rawApiData; // Assuming rawApiData is already the array from the API
             
-            // Ensure parsedRawMaterials is an array before mapping
-            if (!Array.isArray(parsedRawMaterials)) {
-                console.error("Error: toMaterial did not return an array.", parsedRawMaterials);
-                return []; // Return empty array or throw error
+            if (!Array.isArray(rawMaterials)) {
+                console.error("Error: API response was not an array.", rawMaterials);
+                return [];
             }
 
-            // 2. Map each parsed raw material into a clean ProductEntity
-            return parsedRawMaterials.map(productMapper);
+            // 1. Map each raw material into a clean ProductEntity using the updated mapper
+            const productEntities = rawMaterials.map(productMapper);
+
+            // 2. Group the ProductEntity instances
+            return groupProducts(productEntities);
 
         } catch (e) {
-            console.error("Error parsing or mapping product data:", e);
+            console.error("Error parsing, mapping, or grouping product data:", e);
             return null;
         }
     }, [rawApiData]);
 
     return {
-        products: products,
+        products: products, // This is now an array of GroupedProduct or null
         isLoading: !error && !rawApiData,
         isError: error
     };

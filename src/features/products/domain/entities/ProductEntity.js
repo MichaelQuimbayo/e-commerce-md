@@ -1,7 +1,7 @@
 /**
  * Represents a clean Product entity for use within the application domain.
  * This class normalizes the data structure from various sources and
- * includes all relevant product details.
+ * includes all relevant product details, adapted for grouped products.
  */
 export class ProductEntity {
   constructor({
@@ -11,13 +11,14 @@ export class ProductEntity {
     originalPrice,
     price,
     description,
-    colors, // Array of { name, colorHex, images }
-    sizes,  // Array of strings
     status, // e.g., 'available', 'sold-out'
     rating, // number
     category, // string
-    imageUrl, // Primary image URL for the card
-    stock,
+    imageUrl, // Primary image URL for the card (can be derived from resources)
+    stock, // numerical stock for this specific variant
+    codes, // Array of raw codes from API
+    features, // Array of raw features (e.g., color, size) from API
+    resources, // Array of raw resources (e.g., images) from API
   }) {
     this.id = id;
     this.name = name;
@@ -25,13 +26,14 @@ export class ProductEntity {
     this.originalPrice = originalPrice;
     this.price = price;
     this.description = description;
-    this.colors = colors || [];
-    this.sizes = sizes || [];
     this.status = status;
     this.rating = rating;
     this.category = category;
-    this.imageUrl = imageUrl;
-    this.stock = stock ;
+    this.imageUrl = imageUrl; // Can be a fallback or direct from mapper
+    this.stock = stock;
+    this.codes = codes || []; // Store raw codes
+    this.features = features || []; // Store raw features
+    this.resources = resources || []; // Store raw resources
   }
 
   /**
@@ -65,15 +67,12 @@ export class ProductEntity {
   }
 
   /**
-   * Gets the primary image URL for the product.
-   * Prefers the first image of the first color, then imageUrl.
-   * @returns {string}
+   * Gets the primary image URL for the product, derived from resources.
+   * @returns {string | null}
    */
   get primaryImage() {
-    if (this.colors && this.colors.length > 0 && this.colors[0].images && this.colors[0].images.length > 0) {
-      return this.colors[0].images[0];
-    }
-    return this.imageUrl;
+    const primaryResource = this.resources.find(r => r.content_type?.startsWith('image/'));
+    return primaryResource?.url || this.imageUrl || null;
   }
 
   /**
@@ -81,6 +80,25 @@ export class ProductEntity {
    * @returns {string}
    */
   get productSlug() {
-    return this.slug || this.name.toLowerCase().replace(/\s+/g, '-').replace(/[^\w\-]+/g, '');
+    // If slug is explicitly provided, use it. Otherwise, generate from name.
+    return this.slug || this.name.toLowerCase().replace(/\s+/g, '-').replace(/[^\\w\\-]+/g, '');
+  }
+
+  /**
+   * Gets the color of this specific product variant.
+   * @returns {string | null}
+   */
+  get color() {
+    const colorFeature = this.features.find(f => f.entity_type === 'color');
+    return colorFeature?.value || null;
+  }
+
+  /**
+   * Gets the size of this specific product variant.
+   * @returns {string | null}
+   */
+  get size() {
+    const sizeFeature = this.features.find(f => f.entity_type === 'size');
+    return sizeFeature?.value || null;
   }
 }
