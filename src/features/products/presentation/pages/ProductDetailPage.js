@@ -58,17 +58,23 @@ export default function ProductDetailPage({ productGroup: serverProductGroup, cu
     setActiveVariant(foundVariant || null); // Set to found variant or null if combination is invalid
 
     // If a valid variant is found, update the URL. This does NOT cause a loop.
-    if (foundVariant && foundVariant.id !== (router.query.slug?.slice(-36))) {
+    // Compare with the URL's actual variant ID to avoid unnecessary router.replace calls
+    const currentUrlVariantId = router.query.slug?.slice(-36);
+    if (foundVariant && foundVariant.id !== currentUrlVariantId) {
         router.replace(
             `/product/${foundVariant.productSlug}-${foundVariant.id}`,
             undefined,
             { shallow: true }
         );
     }
-  }, [selectedColor, selectedSize, productGroupEntities, router]); // router object is stable enough
+  }, [selectedColor, selectedSize, productGroupEntities, router.query.slug, router]); 
+  
+  // The router object itself is stable, but router.query can change, so we add router.query.slug
+  // The shallow: true prevents re-running getServerSideProps
 
   const [quantity, setQuantity] = useState(1);
   const [addedToCartMessage, setAddedToCartMessage] = useState('');
+  const scrollRef = useRef(null); // For image carousel
 
   // --- RENDER LOGIC --- 
   if (!initialVariant) {
@@ -78,18 +84,22 @@ export default function ProductDetailPage({ productGroup: serverProductGroup, cu
   // Values for display are based on the activeVariant if it exists, otherwise fall back to initial/first variant
   const displayVariant = activeVariant || initialVariant;
   const pageTitle = `${displayVariant.name} | ATHLOS`;
-  const availableColors = getUniqueOptions(productGroupEntities, 'color');
-  const availableSizes = getUniqueOptions(productGroupEntities, 'size');
+  const allAvailableColors = getUniqueOptions(productGroupEntities, 'color');
+  const allAvailableSizes = getUniqueOptions(productGroupEntities, 'size');
+
+  // --- Logic to determine available sizes for the current color --- 
+  const variantsForSelectedColor = productGroupEntities.filter(v => v.color === selectedColor);
+  const validSizesForSelectedColor = getUniqueOptions(variantsForSelectedColor, 'size');
 
   const handleAction = (e, actionType) => {
     e.preventDefault();
-    if (!activeVariant) return; // Prevent action if combination is invalid
+    if (!activeVariant || activeVariant.stock <= 0) return; // Prevent action if combination is invalid or out of stock
 
     const productToAdd = { ...activeVariant, color: selectedColor, size: selectedSize };
     addToCart(productToAdd, quantity);
 
     if (actionType === 'buy') router.push('/checkout');
-    else showMessage(`¡'${activeVariant.name}' añadido al carrito!`);
+    else showMessage(`¡'${activeVariant.name}' (${selectedColor}, ${selectedSize}) añadido al carrito!`);
   };
   
   const showMessage = (message) => {
@@ -126,24 +136,38 @@ export default function ProductDetailPage({ productGroup: serverProductGroup, cu
             <form className="mt-10">
 
               {/* Color Selector */}
-              {availableColors.length > 1 && (
+              {allAvailableColors.length > 1 && (
                 <div>
                   <h3 className="text-sm font-medium">Color: <span className="font-semibold">{selectedColor}</span></h3>
                   <div className="flex items-center space-x-3 mt-3">
-                    {availableColors.map((color) => (
-                      <button key={color} type="button" onClick={() => setSelectedColor(color)} className={`h-8 w-8 rounded-full border border-stone-300 ${selectedColor === color ? 'ring-2 ring-offset-2 ring-blue-500' : ''}`} style={{ backgroundColor: color.toLowerCase() }} />
+                    {allAvailableColors.map((color) => (
+                      <button 
+                        key={color} 
+                        type="button" 
+                        onClick={() => setSelectedColor(color)} 
+                        className={`h-8 w-8 rounded-full border border-stone-300 ${selectedColor === color ? 'ring-2 ring-offset-2 ring-blue-500' : ''}`} 
+                        style={{ backgroundColor: color.toLowerCase() }} 
+                      />
                     ))}
                   </div>
                 </div>
               )}
 
-              {/* Size Selector */}
-              {availableSizes.length > 1 && (
+              {/* Size Selector (with disabled logic) */}
+              {allAvailableSizes.length > 1 && (
                 <div className="mt-8">
-                  <h3 className="text-sm font-medium">Talla: <span className="font-semibold">{selectedSize}</span></h3>
+                  <h3 className="text-sm font-medium">Talla: <span className="font-semibold">{selectedSize || 'N/A'}</span></h3>
                   <div className="flex flex-wrap gap-2 mt-3">
-                    {availableSizes.map((size) => (
-                      <button key={size} type="button" onClick={() => setSelectedSize(size)} className={`border rounded-lg py-2 px-4 text-sm font-medium transition-colors ${selectedSize === size ? 'bg-stone-900 text-white' : 'border-stone-300 hover:bg-stone-100'}`}>
+                    {allAvailableSizes.map((size) => (
+                      <button 
+                        key={size} 
+                        type="button" 
+                        onClick={() => setSelectedSize(size)} 
+                        disabled={!validSizesForSelectedColor.includes(size)} // Disable if not available for selected color
+                        className={`border rounded-lg py-2 px-4 text-sm font-medium transition-colors 
+                          ${selectedSize === size ? 'bg-stone-900 text-white' : 'border-stone-300 hover:bg-stone-100'} 
+                          ${!validSizesForSelectedColor.includes(size) ? 'opacity-30 cursor-not-allowed' : ''}`}
+                      >
                         {size}
                       </button>
                     ))}
@@ -154,7 +178,7 @@ export default function ProductDetailPage({ productGroup: serverProductGroup, cu
               {/* Stock Display */}
               <div className="mt-4">
                 <p className="text-sm font-medium text-gray-900">
-                  Disponible: {activeVariant ? activeVariant.stock : 'Combinación no disponible'}
+                  Disponible: {activeVariant ? (activeVariant.stock > 0 ? activeVariant.stock : 'Agotado') : 'Combinación no disponible'}
                 </p>
               </div>
 
