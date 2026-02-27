@@ -1,9 +1,19 @@
-
-import React, { useContext, useState, useRef } from 'react';
+import React, { useState, useRef } from 'react';
 import { useCart } from '../src/shared/context/CartContext';
 import Navbar from '../src/shared/components/Navbar';
 import Footer from '../src/shared/components/Footer';
 import { useRouter } from 'next/router';
+import { ProductEntity } from '../src/features/products/domain/entities/ProductEntity';
+
+// Helper to format currency consistently
+const formatCurrency = (amount) => {
+  return new Intl.NumberFormat('es-CO', {
+    style: 'currency',
+    currency: 'COP',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(amount);
+};
 
 const Checkout = () => {
     const { cartItems, getCartTotal, clearCart } = useCart();
@@ -66,7 +76,6 @@ const Checkout = () => {
             receipt: receipt ? receipt.name : null
         };
 
-        // Simulate API call and form data submission
         console.log('Enviando pedido:', orderDetails);
         alert('¡Pedido realizado con éxito! (Simulación)');
 
@@ -105,18 +114,21 @@ const Checkout = () => {
                         <h2 className="text-2xl font-semibold mb-4">Resumen del Pedido</h2>
                         <div className="space-y-4">
                             {cartItems.length > 0 ? (
-                                cartItems.map(item => (
-                                    <div key={item.id} className="flex items-center">
-                                        <img src={item.image} alt={item.name} className="w-16 h-16 rounded-md object-cover mr-4" />
-                                        <div className="flex-grow">
-                                            <h3 className="font-semibold">{item.name}</h3>
-                                            <p className="text-sm text-gray-500">Cantidad: {item.quantity}</p>
-                                            {item.color && <p className="text-sm text-gray-500">Color: {item.color}</p>}
-                                            {item.size && <p className="text-sm text-gray-500">Talla: {item.size}</p>}
+                                cartItems.map(item => {
+                                    const product = new ProductEntity(item); // Re-hydrate to access getters
+                                    return (
+                                        <div key={item.variantId} className="flex items-center">
+                                            <img src={product.primaryImage || 'https://via.placeholder.com/64'} alt={product.name} className="w-16 h-16 rounded-md object-cover mr-4" />
+                                            <div className="flex-grow">
+                                                <h3 className="font-semibold">{product.name}</h3>
+                                                <p className="text-sm text-gray-500">Cantidad: {item.quantity}</p>
+                                                {item.color && <p className="text-sm text-gray-500">Color: {item.color}</p>}
+                                                {item.size && <p className="text-sm text-gray-500">Talla: {item.size}</p>}
+                                            </div>
+                                            <p className="font-semibold">{formatCurrency(item.price * item.quantity)}</p>
                                         </div>
-                                        <p className="font-semibold">${(item.price * item.quantity).toFixed(2)}</p>
-                                    </div>
-                                ))
+                                    )
+                                })
                             ) : (
                                 <p>No hay productos en el carrito.</p>
                             )}
@@ -124,7 +136,7 @@ const Checkout = () => {
                         <div className="border-t border-gray-200 mt-4 pt-4">
                             <div className="flex justify-between font-bold text-lg">
                                 <span>Total</span>
-                                <span>${getCartTotal().toFixed(2)}</span>
+                                <span>{formatCurrency(getCartTotal())}</span>
                             </div>
                         </div>
 

@@ -4,6 +4,5 @@
   "/_document": "pages/_document.js",
   "/": "pages/index.js",
   "/product/[slug]": "pages/product/[slug].js",
-  "/category/[categorySlug]": "pages/category/[categorySlug].js",
   "/checkout": "pages/checkout.js"
 }
