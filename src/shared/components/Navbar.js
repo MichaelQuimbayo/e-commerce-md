@@ -31,7 +31,7 @@ const Navbar = () => {
   return (
     <>
       <header className="sticky top-0 z-20 bg-stone-50/80 dark:bg-gray-900/80 backdrop-blur-lg border-b border-stone-200 dark:border-stone-700">
-        <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <nav className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-20">
             
             {/* --- SECCIÓN IZQUIERDA --- */}
@@ -43,8 +43,8 @@ const Navbar = () => {
                 </button>
               </div>
               <div className="hidden md:block">
-                <Link href="/" className="font-serif text-3xl font-bold text-stone-900 dark:text-white">
-                  ATHLOS
+                <Link href="/" className="font-serif text-2xl font-bold text-stone-900 dark:text-white whitespace-nowrap">
+                  AV-STORE
                 </Link>
               </div>
             </div>
@@ -53,8 +53,8 @@ const Navbar = () => {
             {/* En móvil, contiene el logo centrado. En desktop, la navegación centrada. */}
             <div className="md:absolute md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2">
               <div className="md:hidden">
-                <Link href="/" className="font-serif text-3xl font-bold text-stone-900 dark:text-white">
-                  ATHLOS
+                <Link href="/" className="font-serif text-2xl font-bold text-stone-900 dark:text-white whitespace-nowrap">
+                  AV-STORE
                 </Link>
               </div>
               <div className="hidden md:flex h-full items-center space-x-8">
@@ -90,7 +90,7 @@ const Navbar = () => {
           <div className="absolute inset-0 bg-black/20 backdrop-blur-sm" onClick={toggleMobileMenu}></div>
           <div className="relative w-72 max-w-[calc(100%-3rem)] bg-stone-50 dark:bg-gray-800 h-full p-6">
             <div className="flex justify-between items-center mb-8">
-              <span className="font-serif text-2xl font-bold">ATHLOS</span>
+              <span className="font-serif text-2xl font-bold">AV-STORE</span>
               <button onClick={toggleMobileMenu} className="p-2 -mr-2 rounded-md"><X size={24} /></button>
             </div>
             <nav className="flex flex-col space-y-4">

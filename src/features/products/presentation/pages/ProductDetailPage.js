@@ -3,7 +3,6 @@ import Head from 'next/head';
 import { useCart } from '../../../../shared/context/CartContext';
 import Navbar from '../../../../shared/components/Navbar';
 import Footer from '../../../../shared/components/Footer';
-import ProductCard from '../components/ProductCard';
 import { Plus, Minus, ChevronDown, CheckCircle } from 'lucide-react';
 import { useRouter } from 'next/router';
 import { ProductEntity } from '../../domain/entities/ProductEntity';
@@ -40,19 +39,32 @@ export default function ProductDetailPage({ productGroup: serverProductGroup, cu
   const router = useRouter();
   const { addToCart } = useCart();
 
-  const initialVariant = useMemo(() => 
-    productGroupEntities.find(v => v.id === currentVariantId) || productGroupEntities[0]
-  , [productGroupEntities, currentVariantId]);
+  // Determine all available colors and sizes from the entire product group
+  const allAvailableColors = useMemo(() => getUniqueOptions(productGroupEntities, 'color'), [productGroupEntities]);
+  const allAvailableSizes = useMemo(() => getUniqueOptions(productGroupEntities, 'size'), [productGroupEntities]);
+
+  const initialVariant = useMemo(() => {
+    // Try to find the variant that matches the URL ID
+    const found = productGroupEntities.find(v => v.id === currentVariantId);
+    // If not found or no ID in URL, use the first variant from the group
+    return found || productGroupEntities[0];
+  }, [productGroupEntities, currentVariantId]);
 
   // --- STATE MANAGEMENT (CONTROLLER LOGIC) ---
-  // 1. User's selection state (source of intent)
-  const [selectedColor, setSelectedColor] = useState(initialVariant?.color);
-  const [selectedSize, setSelectedSize] = useState(initialVariant?.size);
+  // Initialize selected color/size: if only one option, select it automatically
+  const [selectedColor, setSelectedColor] = useState(() => {
+    if (allAvailableColors.length === 1) return allAvailableColors[0];
+    return initialVariant?.color;
+  });
+  const [selectedSize, setSelectedSize] = useState(() => {
+    if (allAvailableSizes.length === 1) return allAvailableSizes[0];
+    return initialVariant?.size;
+  });
 
-  // 2. Resulting active variant state (the outcome of the selection)
+  // Resulting active variant state (the outcome of the selection)
   const [activeVariant, setActiveVariant] = useState(initialVariant);
   
-  // 3. Effect that reacts to user's selection and finds the result
+  // Effect that reacts to user's selection (or auto-selection) and finds the result
   useEffect(() => {
     const foundVariant = findVariant(productGroupEntities, selectedColor, selectedSize);
     setActiveVariant(foundVariant || null); // Set to found variant or null if combination is invalid
@@ -69,8 +81,26 @@ export default function ProductDetailPage({ productGroup: serverProductGroup, cu
     }
   }, [selectedColor, selectedSize, productGroupEntities, router.query.slug, router]); 
   
-  // The router object itself is stable, but router.query can change, so we add router.query.slug
-  // The shallow: true prevents re-running getServerSideProps
+  // --- NEW EFFECT: Auto-select first available size when color changes --- //
+  useEffect(() => {
+    if (selectedColor) {
+      const variantsForSelectedColor = productGroupEntities.filter(v => v.color === selectedColor);
+      const validSizesForSelectedColor = getUniqueOptions(variantsForSelectedColor, 'size');
+      
+      // If the currently selected size is not valid for the new color, or no size is selected,
+      // automatically select the first valid size for this color.
+      // Only auto-select if there's actually a valid size to pick.
+      if (validSizesForSelectedColor.length > 0 && (!selectedSize || !validSizesForSelectedColor.includes(selectedSize))) {
+        setSelectedSize(validSizesForSelectedColor[0]);
+      } else if (validSizesForSelectedColor.length === 0) {
+        // If no sizes are available for this color, clear selectedSize
+        setSelectedSize(null);
+      }
+    } else {
+        // If no color is selected, ensure no size is selected either
+        setSelectedSize(null); 
+    }
+  }, [selectedColor, productGroupEntities]); 
 
   const [quantity, setQuantity] = useState(1);
   const [addedToCartMessage, setAddedToCartMessage] = useState('');
@@ -84,8 +114,6 @@ export default function ProductDetailPage({ productGroup: serverProductGroup, cu
   // Values for display are based on the activeVariant if it exists, otherwise fall back to initial/first variant
   const displayVariant = activeVariant || initialVariant;
   const pageTitle = `${displayVariant.name} | ATHLOS`;
-  const allAvailableColors = getUniqueOptions(productGroupEntities, 'color');
-  const allAvailableSizes = getUniqueOptions(productGroupEntities, 'size');
 
   // --- Logic to determine available sizes for the current color --- 
   const variantsForSelectedColor = productGroupEntities.filter(v => v.color === selectedColor);
@@ -108,7 +136,7 @@ export default function ProductDetailPage({ productGroup: serverProductGroup, cu
   };
 
   return (
-    <>
+    <> 
       <Head><title>{pageTitle}</title></Head>
       <Navbar />
       <main className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-16 bg-white">
@@ -136,7 +164,7 @@ export default function ProductDetailPage({ productGroup: serverProductGroup, cu
             <form className="mt-10">
 
               {/* Color Selector */}
-              {allAvailableColors.length > 1 && (
+              {allAvailableColors.length > 0 && (
                 <div>
                   <h3 className="text-sm font-medium">Color: <span className="font-semibold">{selectedColor}</span></h3>
                   <div className="flex items-center space-x-3 mt-3">
@@ -154,9 +182,9 @@ export default function ProductDetailPage({ productGroup: serverProductGroup, cu
               )}
 
               {/* Size Selector (with disabled logic) */}
-              {allAvailableSizes.length > 1 && (
+              {allAvailableSizes.length > 0 && (
                 <div className="mt-8">
-                  <h3 className="text-sm font-medium">Talla: <span className="font-semibold">{selectedSize || 'N/A'}</span></h3>
+                  <h3 className="text-sm font-medium">Talla: <span className="font-semibold">{selectedSize}</span></h3>
                   <div className="flex flex-wrap gap-2 mt-3">
                     {allAvailableSizes.map((size) => (
                       <button 
