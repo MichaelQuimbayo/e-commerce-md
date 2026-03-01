@@ -3,7 +3,6 @@ import Navbar from '../../../../shared/components/Navbar';
 import Footer from '../../../../shared/components/Footer';
 import ProductCard from '../components/ProductCard';
 import { Search } from 'lucide-react';
-import { useMaterials } from '../../infrastructure/data/materials';
 
 export default function ShopPage({ products }) {
   const [searchTerm, setSearchTerm] = useState('');
