@@ -1,0 +1,36 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Aquí puedes definir las fuentes que usarías, ej. desde Google Fonts */
+    /* Por ahora, usaremos placeholders genéricos */
+    --font-sans: 'Inter', sans-serif;
+    --font-serif: 'Lora', serif;
+  }
+
+  body {
+    @apply bg-stone-50 text-stone-800 dark:bg-gray-900 dark:text-stone-200;
+  }
+}
+
+/* Utilidad para ocultar la barra de scroll */
+@layer utilities {
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  .scrollbar-hide {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+
+  @keyframes scroll {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-100%); }
+  }
+
+  .animate-scroll {
+    animation: scroll 80s linear infinite;
+  }
+}
