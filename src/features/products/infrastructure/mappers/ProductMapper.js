@@ -18,21 +18,23 @@ function slugify(text) {
 export const toDomain = (rawMaterial) => {
   const id = rawMaterial.id;
 
-  // Name from descriptions
-  const name = rawMaterial.descriptions?.find(d => d.lang === 'es-co')?.value ||
-               rawMaterial.descriptions?.[0]?.value ||
-               'Nombre no disponible';
+  // --- Robust Name Extraction ---
+  // Ensure descriptions is an array before trying to process it.
+  // Fallback to a top-level `name` property if descriptions are missing.
+  const name = (Array.isArray(rawMaterial.descriptions) && rawMaterial.descriptions.find(d => d.lang === 'es-co')?.value) ||
+               (Array.isArray(rawMaterial.descriptions) && rawMaterial.descriptions[0]?.value) ||
+               rawMaterial.name || // Fallback for items that might have a direct name property
+               'Producto sin Nombre'; // Final fallback
 
-  // Description from descriptions
-  const description = rawMaterial.descriptions?.find(d => d.lang === 'es-co' && d.value !== name)?.value ||
-                      rawMaterial.descriptions?.[0]?.value ||
-                      ''; // Fallback to first available description or empty
+  // --- Robust Description Extraction ---
+  const description = (Array.isArray(rawMaterial.descriptions) && rawMaterial.descriptions.find(d => d.lang === 'es-co' && d.value !== name)?.value) ||
+                      (Array.isArray(rawMaterial.descriptions) && rawMaterial.descriptions.find(d => d.value !== name)?.value) ||
+                      'Descripción no disponible';
 
   const slug = slugify(name);
 
   // Price from values
   const priceValue = rawMaterial.values?.find(v => v.entity_type === 'price')?.value || 0;
-  // originalPrice not in sample, default to null
   const originalPriceValue = rawMaterial.values?.find(v => v.entity_type === 'original_price')?.value || null;
 
   // Stock from values
