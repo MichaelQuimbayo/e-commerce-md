@@ -77,7 +77,12 @@ function productStateReducer(state, action) {
       };
     }
     case 'SET_QUANTITY': {
-        return {...state, quantity: Math.max(1, payload.quantity) };
+        const stockLimit = state.activeVariant ? state.activeVariant.stock : 0;
+        const newQuantity = Math.max(1, payload.quantity);
+        return {
+            ...state,
+            quantity: Math.min(newQuantity, stockLimit)
+        };
     }
     case 'SELECT_IMAGE': {
         return {...state, selectedImage: payload.imageUrl };
@@ -252,7 +257,7 @@ export default function ProductDetailPage({ productGroup: serverProductGroup, cu
                 <div className="flex items-center border border-stone-300 rounded-lg mt-3" style={{ width: 'fit-content' }}>
                   <button type="button" onClick={() => dispatch({ type: 'SET_QUANTITY', payload: { quantity: quantity - 1 }})} className="p-3"><Minus size={16} /></button>
                   <span className="px-4">{quantity}</span>
-                  <button type="button" onClick={() => dispatch({ type: 'SET_QUANTITY', payload: { quantity: quantity + 1 }})} className="p-3"><Plus size={16} /></button>
+                  <button type="button" onClick={() => dispatch({ type: 'SET_QUANTITY', payload: { quantity: quantity + 1 }})} className="p-3 disabled:opacity-30" disabled={quantity >= activeVariant.stock}><Plus size={16} /></button>
                 </div>
               </div>
               <div className="mt-8 space-y-4">
