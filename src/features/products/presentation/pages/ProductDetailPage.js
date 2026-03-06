@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import Head from 'next/head';
 import { useCart } from '../../../../shared/context/CartContext';
+import { useFavorites } from '../../../../shared/context/FavoritesContext';
 import Navbar from '../../../../shared/components/Navbar';
 import Footer from '../../../../shared/components/Footer';
-import { Plus, Minus, ChevronDown, CheckCircle } from 'lucide-react';
+import { Plus, Minus, ChevronDown, CheckCircle, Star, Heart, Facebook, Instagram } from 'lucide-react';
 import { useRouter } from 'next/router';
 import { ProductEntity } from '../../domain/entities/ProductEntity';
 
@@ -31,6 +32,20 @@ const findVariant = (variants, color, size) => {
   });
 };
 
+// --- RATING COMPONENT (for local use) ---
+const ProductRating = ({ rating, reviewCount }) => (
+  <div className="flex items-center">
+    <div className="flex items-center">
+      {[...Array(5)].map((_, i) => (
+        <Star key={i} size={16} className={i < Math.floor(rating) ? "text-yellow-400 fill-current" : "text-stone-300"} />
+      ))}
+    </div>
+    {reviewCount !== null && (
+      <span className="text-sm text-stone-500 ml-2">({reviewCount} reseñas)</span>
+    )}
+  </div>
+);
+
 export default function ProductDetailPage({ productGroup: serverProductGroup, currentVariantId }) {
   const productGroupEntities = useMemo(() => 
     serverProductGroup ? serverProductGroup.map(p => new ProductEntity(p)) : []
@@ -38,20 +53,16 @@ export default function ProductDetailPage({ productGroup: serverProductGroup, cu
 
   const router = useRouter();
   const { addToCart } = useCart();
+  const { isFavorite, toggleFavorite } = useFavorites();
 
-  // Determine all available colors and sizes from the entire product group
   const allAvailableColors = useMemo(() => getUniqueOptions(productGroupEntities, 'color'), [productGroupEntities]);
   const allAvailableSizes = useMemo(() => getUniqueOptions(productGroupEntities, 'size'), [productGroupEntities]);
 
   const initialVariant = useMemo(() => {
-    // Try to find the variant that matches the URL ID
     const found = productGroupEntities.find(v => v.id === currentVariantId);
-    // If not found or no ID in URL, use the first variant from the group
     return found || productGroupEntities[0];
   }, [productGroupEntities, currentVariantId]);
 
-  // --- STATE MANAGEMENT (CONTROLLER LOGIC) ---
-  // Initialize selected color/size: if only one option, select it automatically
   const [selectedColor, setSelectedColor] = useState(() => {
     if (allAvailableColors.length === 1) return allAvailableColors[0];
     return initialVariant?.color;
@@ -61,16 +72,16 @@ export default function ProductDetailPage({ productGroup: serverProductGroup, cu
     return initialVariant?.size;
   });
 
-  // Resulting active variant state (the outcome of the selection)
   const [activeVariant, setActiveVariant] = useState(initialVariant);
+  const [isMounted, setIsMounted] = useState(false);
   
-  // Effect that reacts to user's selection (or auto-selection) and finds the result
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
   useEffect(() => {
     const foundVariant = findVariant(productGroupEntities, selectedColor, selectedSize);
-    setActiveVariant(foundVariant || null); // Set to found variant or null if combination is invalid
-
-    // If a valid variant is found, update the URL. This does NOT cause a loop.
-    // Compare with the URL's actual variant ID to avoid unnecessary router.replace calls
+    setActiveVariant(foundVariant || null);
     const currentUrlVariantId = router.query.slug?.slice(-36);
     if (foundVariant && foundVariant.id !== currentUrlVariantId) {
         router.replace(
@@ -81,41 +92,30 @@ export default function ProductDetailPage({ productGroup: serverProductGroup, cu
     }
   }, [selectedColor, selectedSize, productGroupEntities, router.query.slug, router]); 
   
-  // --- NEW EFFECT: Auto-select first available size when color changes --- //
   useEffect(() => {
     if (selectedColor) {
       const variantsForSelectedColor = productGroupEntities.filter(v => v.color === selectedColor);
       const validSizesForSelectedColor = getUniqueOptions(variantsForSelectedColor, 'size');
-      
-      // If the currently selected size is not valid for the new color, or no size is selected,
-      // automatically select the first valid size for this color.
-      // Only auto-select if there's actually a valid size to pick.
       if (validSizesForSelectedColor.length > 0 && (!selectedSize || !validSizesForSelectedColor.includes(selectedSize))) {
         setSelectedSize(validSizesForSelectedColor[0]);
       } else if (validSizesForSelectedColor.length === 0) {
-        // If no sizes are available for this color, clear selectedSize
         setSelectedSize(null);
       }
     } else {
-        // If no color is selected, ensure no size is selected either
         setSelectedSize(null); 
     }
   }, [selectedColor, productGroupEntities]); 
 
   const [quantity, setQuantity] = useState(1);
   const [addedToCartMessage, setAddedToCartMessage] = useState('');
-  const scrollRef = useRef(null); // For image carousel
-
-  // --- RENDER LOGIC (Early exit and main variant setup) --- 
+  
   if (!initialVariant) {
     return <div className="flex items-center justify-center h-screen"><p>Producto no encontrado.</p></div>;
   }
 
-  // Values for display are based on the activeVariant if it exists, otherwise fall back to initial/first variant
   const displayVariant = activeVariant || initialVariant;
   const pageTitle = `${displayVariant.name} | ATHLOS`;
 
-  // --- Image Gallery State ---
   const allImages = useMemo(() => {
     if (!displayVariant) return [];
     const imageUrls = new Set();
@@ -129,6 +129,7 @@ export default function ProductDetailPage({ productGroup: serverProductGroup, cu
   }, [displayVariant]);
 
   const [selectedImage, setSelectedImage] = useState(null);
+  const [reviewCount, setReviewCount] = useState(null);
 
   useEffect(() => {
     if (allImages.length > 0 && !selectedImage) {
@@ -136,17 +137,18 @@ export default function ProductDetailPage({ productGroup: serverProductGroup, cu
     }
   }, [allImages, selectedImage]);
 
-  // --- Logic to determine available sizes for the current color --- 
+  useEffect(() => {
+      setReviewCount(Math.floor(Math.random() * 50) + 10);
+  }, [displayVariant]);
+
   const variantsForSelectedColor = productGroupEntities.filter(v => v.color === selectedColor);
   const validSizesForSelectedColor = getUniqueOptions(variantsForSelectedColor, 'size');
 
   const handleAction = (e, actionType) => {
     e.preventDefault();
-    if (!activeVariant || activeVariant.stock <= 0) return; // Prevent action if combination is invalid or out of stock
-
+    if (!activeVariant || activeVariant.stock <= 0) return;
     const productToAdd = { ...activeVariant, color: selectedColor, size: selectedSize };
     addToCart(productToAdd, quantity);
-
     if (actionType === 'buy') router.push('/checkout');
     else showMessage(`¡'${activeVariant.name}' (${selectedColor}, ${selectedSize}) añadido al carrito!`);
   };
@@ -154,6 +156,14 @@ export default function ProductDetailPage({ productGroup: serverProductGroup, cu
   const showMessage = (message) => {
     setAddedToCartMessage(message);
     setTimeout(() => setAddedToCartMessage(''), 3000);
+  };
+
+  const rating = displayVariant.rating || 4;
+
+  const handleFavoriteClick = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    toggleFavorite(displayVariant.groupCode); 
   };
 
   return (
@@ -187,8 +197,20 @@ export default function ProductDetailPage({ productGroup: serverProductGroup, cu
 
           {/* --- Details Section --- */}
           <div className="mt-8 md:mt-0">
-            <h1 className="font-serif text-4xl sm:text-5xl font-medium tracking-tight">{displayVariant.name}</h1>
-            <p className="text-2xl mt-4">{activeVariant ? activeVariant.displayPrice : '--'}</p>
+            <div className="flex justify-between items-start">
+              <h1 className="font-serif text-4xl sm:text-5xl font-medium tracking-tight">{displayVariant.name}</h1>
+              <button onClick={handleFavoriteClick} className="p-2 rounded-full hover:bg-stone-100 transition-colors ml-4">
+                <Heart className={`transition-colors ${isMounted && isFavorite(displayVariant.groupCode) ? 'text-red-500 fill-current' : 'text-stone-500'}`} size={28}/>
+              </button>
+            </div>
+            
+            <div className="mt-4 space-y-4">
+              <p className="text-stone-600 text-lg">{displayVariant.description}</p>
+              <ProductRating rating={rating} reviewCount={reviewCount} />
+            </div>
+
+            <p className="text-3xl font-bold mt-6">{activeVariant ? activeVariant.displayPrice : '--'}</p>
+            
             <form className="mt-10">
 
               {/* Color Selector */}
@@ -259,10 +281,19 @@ export default function ProductDetailPage({ productGroup: serverProductGroup, cu
                 {addedToCartMessage && <div className="mt-2 text-center text-green-600"><p>{addedToCartMessage}</p></div>}
               </div>
             </form>
+
+            {/* Social Share Section */}
+            <div className="mt-10 pt-6 border-t">
+                <h3 className="text-sm font-medium text-stone-800">Nuestras redes</h3>
+                <div className="flex items-center space-x-4 mt-3">
+                    <a href="https://www.facebook.com/tupagina" target="_blank" rel="noopener noreferrer" className="text-stone-500 hover:text-stone-800 transition-colors"><Facebook size={24}/></a>
+                    <a href="https://www.instagram.com/tuusuario" target="_blank" rel="noopener noreferrer" className="text-stone-500 hover:text-stone-800 transition-colors"><Instagram size={24}/></a>
+                    
+                </div>
+            </div>
             
-            {/* Description Details */}
-            <div className="mt-12 space-y-4">
-              <details className="group border-b border-stone-300 pb-4"><summary className="flex justify-between items-center cursor-pointer list-none"><span className="font-medium">Descripción</span><ChevronDown className="group-open:rotate-180" /></summary><p className="mt-4 text-stone-600">{displayVariant.description}</p></details>
+            {/* Accordion Section */}
+            <div className="mt-6 space-y-4">
               <details className="group border-b border-stone-300 pb-4"><summary className="flex justify-between items-center cursor-pointer list-none"><span className="font-medium">Envío y Devoluciones</span><ChevronDown className="group-open:rotate-180" /></summary><p className="mt-4 text-stone-600">Envío estándar gratuito en todos los pedidos. Devoluciones aceptadas dentro de los 30 días.</p></details>
             </div>
           </div>
