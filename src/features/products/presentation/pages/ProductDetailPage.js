@@ -106,7 +106,7 @@ export default function ProductDetailPage({ productGroup: serverProductGroup, cu
   const [addedToCartMessage, setAddedToCartMessage] = useState('');
   const scrollRef = useRef(null); // For image carousel
 
-  // --- RENDER LOGIC --- 
+  // --- RENDER LOGIC (Early exit and main variant setup) --- 
   if (!initialVariant) {
     return <div className="flex items-center justify-center h-screen"><p>Producto no encontrado.</p></div>;
   }
@@ -114,6 +114,27 @@ export default function ProductDetailPage({ productGroup: serverProductGroup, cu
   // Values for display are based on the activeVariant if it exists, otherwise fall back to initial/first variant
   const displayVariant = activeVariant || initialVariant;
   const pageTitle = `${displayVariant.name} | ATHLOS`;
+
+  // --- Image Gallery State ---
+  const allImages = useMemo(() => {
+    if (!displayVariant) return [];
+    const imageUrls = new Set();
+    if (displayVariant.primaryImage) {
+      imageUrls.add(displayVariant.primaryImage);
+    }
+    displayVariant.resources
+      .filter(r => r.content_type?.startsWith('image/'))
+      .forEach(r => imageUrls.add(r.url));
+    return Array.from(imageUrls);
+  }, [displayVariant]);
+
+  const [selectedImage, setSelectedImage] = useState(null);
+
+  useEffect(() => {
+    if (allImages.length > 0 && !selectedImage) {
+        setSelectedImage(allImages[0]);
+    }
+  }, [allImages, selectedImage]);
 
   // --- Logic to determine available sizes for the current color --- 
   const variantsForSelectedColor = productGroupEntities.filter(v => v.color === selectedColor);
@@ -144,17 +165,24 @@ export default function ProductDetailPage({ productGroup: serverProductGroup, cu
           {/* --- Image Section --- */}
           <div>
             <div className="aspect-square w-full overflow-hidden rounded-lg border-2 bg-stone-200">
-              <img src={displayVariant.primaryImage || 'https://via.placeholder.com/400'} alt={`${displayVariant.name} - ${displayVariant.color}`} className="w-full h-full object-contain" />
+              <img src={selectedImage || 'https://via.placeholder.com/400'} alt={`${displayVariant.name} - ${displayVariant.color}`} className="w-full h-full object-contain transition-opacity duration-300" />
             </div>
-            <div className="mt-4">
-              <div className="flex items-center space-x-3 overflow-x-auto p-2 scrollbar-hide">
-                {displayVariant.resources.filter(r => r.content_type?.startsWith('image/')).map((resource, index) => (
-                  <button key={index} type="button" className={`flex-shrink-0 aspect-square w-20 h-20 rounded-md overflow-hidden bg-stone-200 p-1 transition-all`}>
-                    <img src={resource.url} alt={`${displayVariant.name} thumbnail ${index + 1}`} className="w-full h-full object-contain" />
-                  </button>
-                ))}
+            {allImages.length > 1 && (
+              <div className="mt-4">
+                <div className="flex items-center space-x-3 overflow-x-auto p-2 scrollbar-hide">
+                  {allImages.map((imageUrl, index) => (
+                    <button 
+                      key={index} 
+                      type="button" 
+                      onClick={() => setSelectedImage(imageUrl)}
+                      className={`flex-shrink-0 aspect-square w-20 h-20 rounded-md overflow-hidden bg-stone-200 p-1 transition-all ${selectedImage === imageUrl ? 'ring-2 ring-blue-500' : 'opacity-70 hover:opacity-100'}`}
+                    >
+                      <img src={imageUrl} alt={`${displayVariant.name} thumbnail ${index + 1}`} className="w-full h-full object-contain" />
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
           </div>
 
           {/* --- Details Section --- */}
