@@ -26,9 +26,8 @@ export const toDomain = (rawMaterial) => {
                rawMaterial.name || // Fallback for items that might have a direct name property
                'Producto sin Nombre'; // Final fallback
 
-  // --- Robust Description Extraction ---
-  const description = (Array.isArray(rawMaterial.descriptions) && rawMaterial.descriptions.find(d => d.lang === 'es-co' && d.value !== name)?.value) ||
-                      (Array.isArray(rawMaterial.descriptions) && rawMaterial.descriptions.find(d => d.value !== name)?.value) ||
+  // Description from features array
+  const description = rawMaterial.features?.find(f => f.entity_type === 'description')?.value || 
                       'Descripción no disponible';
 
   const slug = slugify(name);

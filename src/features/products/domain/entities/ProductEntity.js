@@ -81,7 +81,7 @@ export class ProductEntity {
    */
   get productSlug() {
     // If slug is explicitly provided, use it. Otherwise, generate from name.
-    return this.slug || this.name.toLowerCase().replace(/\s+/g, '-').replace(/[^\\w\\-]+/g, '');
+    return this.slug || this.name.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
   }
 
   /**

@@ -129,15 +129,14 @@ export default function ProductDetailPage({ productGroup: serverProductGroup, cu
     if (initialVariant) {
       dispatch({ type: 'INITIALIZE', payload: { initialVariant, variants: productGroupEntities, allColors: allAvailableColors, allSizes: allAvailableSizes } });
     }
-  }, [initialVariant, productGroupEntities, allAvailableColors, allAvailableSizes]);
+  }, [initialVariant]);
 
   useEffect(() => {
     const currentSlugId = router.query.slug?.slice(-36);
-    // Only push a new URL if the active variant is valid AND its ID is different from the ID currently in the URL slug.
-    if (activeVariant && activeVariant.id !== currentSlugId) {
+    if (isMounted && activeVariant && activeVariant.id !== currentSlugId) {
       router.replace(`/product/${activeVariant.productSlug}-${activeVariant.id}`, undefined, { shallow: true });
     }
-  }, [activeVariant]);
+  }, [activeVariant, isMounted, router.query.slug]);
 
   useEffect(() => {
     setReviewCount(Math.floor(Math.random() * 50) + 10);
@@ -155,7 +154,7 @@ export default function ProductDetailPage({ productGroup: serverProductGroup, cu
         p.resources.filter(r => r.content_type?.startsWith('image/')).forEach(r => imageUrls.add(r.url));
     });
     return Array.from(imageUrls);
-  }, [productGroupEntities, initialVariant]);
+  }, [productGroupEntities]);
 
   const displayVariant = activeVariant || initialVariant;
 
@@ -183,7 +182,7 @@ export default function ProductDetailPage({ productGroup: serverProductGroup, cu
     }
   };
 
-  const rating = displayVariant.rating || 4;
+  const rating = displayVariant?.rating || 4;
 
   if (!isMounted || !activeVariant) {
     return <div className="flex items-center justify-center h-screen"><p>Cargando producto...</p></div>;
@@ -211,9 +210,8 @@ export default function ProductDetailPage({ productGroup: serverProductGroup, cu
             )}
           </div>
 
-          {/* --- Details Section --- */}
+          {/* Details Section */}
           <div className="mt-8 md:mt-0">
-
             <div className="flex justify-between items-start">
               <h1 className="font-serif text-4xl sm:text-5xl font-medium tracking-tight">{displayVariant.name}</h1>
               <button onClick={() => toggleFavorite(displayVariant.groupCode)} className="p-2 rounded-full hover:bg-stone-100 transition-colors ml-4">
