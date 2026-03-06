@@ -7,38 +7,38 @@ import TestimonialsSection from '../../../testimonials/presentation/components/T
 import GuaranteesSection from '../../../../shared/components/GuaranteesSection';
 import { useProducts } from '../../infrastructure/data/useProducts';
 import ModelingCarousel from '../components/ModelingCarousel';
+import HeroCarousel from '../../../../shared/components/HeroCarousel';
 
 const PRODUCT_LIMIT = 12;
 
-const HeroSection = () => (
-  <div className="relative h-[80vh] min-h-[400px] flex items-center justify-center text-center text-white">
-    <div className="absolute inset-0">
-      <img
-        className="w-full h-full object-cover"
-        src="https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
-        alt="Hombre entrenando"
-      />
-      <div className="absolute inset-0 bg-black opacity-50"></div>
-    </div>
-    <div className="relative max-w-2xl mx-auto px-4">
-      <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-bold">
-        Eleva tu Rendimiento
-      </h1>
-      <p className="mt-4 text-lg sm:text-xl text-stone-200">
-        Diseño premium y tecnología de vanguardia para el atleta moderno.
-      </p>
-      <div className="mt-8">
-        <Link href="/shop" className="inline-block bg-white text-stone-900 font-semibold px-8 py-3 rounded-lg hover:bg-stone-200 transition-colors">
-          Ver colección
-        </Link>
-      </div>
-    </div>
-  </div>
-);
+// Datos para el carrusel principal
+const slides = [
+  {
+    image: '/images/tienda_de_ropa_deportiva.png',
+    title: 'Eleva tu Rendimiento',
+    subtitle: 'Diseño premium y tecnología de vanguardia para el atleta moderno.',
+    cta: 'Ver colección',
+    link: '/shop'
+  },
+  {
+    image: '/images/camisetas_de_futbol_04.png',
+    title: 'Velocidad y Estilo',
+    subtitle: 'Tecnología que te impulsa más allá de tus límites.',
+    cta: 'Descubre Novedades',
+    link: '/shop'
+  },
+  {
+    image: '/images/camisetas_de_futbol.png',
+    title: 'Flexibilidad sin Compromisos',
+    subtitle: 'Confort y diseño que se mueven contigo.',
+    cta: 'Explora Yoga',
+    link: '/shop'
+  }
+];
 
 const BenefitsSection = () => (
   <div className="py-24 sm:py-32">
-    <div className="max-w-8xl mx-auto px-6 lg:px-8">
+    <div className="max-w-[1600px] mx-auto px-6 lg:px-8">
       <div className="max-w-2xl mx-auto lg:text-center">
         <h2 className="font-serif text-3xl font-bold tracking-tight text-stone-900 dark:text-white sm:text-4xl">
           Diseñado para el Movimiento
@@ -67,14 +67,14 @@ export default function HomePage({ testimonials, products: serverProductGroups }
     <>
       <Navbar />
       <main>
-        <HeroSection />
+        <HeroCarousel slides={slides} />
         <div className="py-16 sm:py-20">
-          <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 className="text-2xl font-bold tracking-tight text-stone-900 dark:text-white">Para ti</h2>
+          <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 className="text-2xl font-bold tracking-tight text-stone-900 dark:text-white">Mas destacados</h2>
 
             {isLoading && <p className="text-center mt-6 text-stone-500">Cargando productos...</p>}
 
-            <div className="mt-6 grid grid-cols-2 gap-2 sm:gap-4 lg:gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="mt-6 grid grid-cols-2 gap-2 sm:gap-4 lg:gap-6 sm:grid-cols-2 lg:grid-cols-5">
               {displayedProductGroups
                 .filter(Boolean) // Filter out any null/undefined groups for robustness
                 .map((group) => (

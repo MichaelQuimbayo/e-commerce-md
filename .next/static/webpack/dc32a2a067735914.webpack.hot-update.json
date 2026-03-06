@@ -1,1 +1,0 @@
-{"c":["pages/_app","webpack"],"r":["pages/category/[categorySlug]"],"m":["./node_modules/next/dist/build/webpack/loaders/next-client-pages-loader.js?absolutePagePath=P%3A%5Ce-commerce-md%5Cpages%5Ccategory%5C%5BcategorySlug%5D.js&page=%2Fcategory%2F%5BcategorySlug%5D!","./pages/category/[categorySlug].js","./src/features/products/presentation/pages/CategoryPage.js"]}

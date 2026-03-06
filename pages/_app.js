@@ -23,7 +23,7 @@ function MyApp({ Component, pageProps }) {
         <CartProvider>
           <FavoritesProvider>
             {/* Wrap the main content with a div for global background */}
-            <div className="bg-stone-100 min-h-screen">
+            <div className="bg-stone-100 dark:bg-stone-900 min-h-screen">
               <main className={`${inter.variable} ${lora.variable} font-sans`}>
                 <Component {...pageProps} />
               </main>

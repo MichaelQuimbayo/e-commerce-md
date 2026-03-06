@@ -9,7 +9,7 @@ const ModelingCarousel = ({ products: productGroups }) => {
   const duplicatedGroups = [...productGroups, ...productGroups];
 
   return (
-    <div className="py-16 sm:py-10 max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 border-2 rounded-2xl bg-stone-50 dark:bg-stone-900">
+    <div className="py-16 sm:py-10 max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 border-2 rounded-2xl bg-stone-50 dark:bg-stone-900">
       <h2 className="text-2xl font-bold tracking-tight text-stone-900 dark:text-white mb-8 text-center">#AVSTOREenlaCalle</h2>
       <div className="relative mt-8 w-full overflow-hidden">
         <div className="flex animate-scroll">

@@ -41,7 +41,7 @@ const TestimonialsSection = ({ testimonials }) => {
 
   return (
     <div className="py-16 sm:py-20  dark:bg-gray-900" > {/* Removed bg-stone-50 dark:bg-gray-900 */}
-      <div className="max-w-8xl mx-auto bg-stone-50 border-2 rounded-2xl">
+      <div className="max-w-[1600px] mx-auto bg-stone-50 border-2 rounded-2xl">
         <div className="max-w-2xl mx-auto text-center px-4 sm:px-6 lg:px-8">
           <h2 className="font-serif text-3xl mt-6 MT font-bold tracking-tight text-stone-900 dark:text-white sm:text-4xl">
             Lo que dicen nuestros Clientes
