@@ -65,7 +65,7 @@ const Footer = () => {
 
         <div className="mt-12 border-t border-stone-200 dark:border-stone-700 pt-8">
           <p className="text-base text-stone-500 dark:text-stone-400 text-center">
-            &copy; {new Date().getFullYear()} ATHLOS. Todos los derechos reservados.
+            &copy; {new Date().getFullYear()} AV-STORE. Todos los derechos reservados.
           </p>
         </div>
       </div>

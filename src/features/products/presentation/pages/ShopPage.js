@@ -3,20 +3,27 @@ import Navbar from '../../../../shared/components/Navbar';
 import Footer from '../../../../shared/components/Footer';
 import ProductCard from '../components/ProductCard';
 import { Search } from 'lucide-react';
+import { ProductEntity } from '../../domain/entities/ProductEntity';
 
-export default function ShopPage({ products }) {
+export default function ShopPage({ products: initialProductGroups }) {
   const [searchTerm, setSearchTerm] = useState('');
-  const { materials, isLoading, isError } = useMaterials();
+
+  // Re-hydrate plain objects from props back into ProductEntity class instances
+  const productGroups = useMemo(() => 
+    initialProductGroups ? initialProductGroups.map(group => ({
+        ...group,
+        variants: group.variants.map(v => new ProductEntity(v))
+    })) : []
+  , [initialProductGroups]);
 
   const filteredProducts = useMemo(() => {
     if (!searchTerm) {
-      return products;
+      return productGroups;
     }
-    return products.filter(product =>
-      product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (product.description && product.description.toLowerCase().includes(searchTerm.toLowerCase()))
+    return productGroups.filter(group =>
+      group.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
-  }, [products, searchTerm]);
+  }, [productGroups, searchTerm]);
 
   return (
     <>
@@ -42,7 +49,7 @@ export default function ShopPage({ products }) {
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Marca, equipo y más..."
+                placeholder="Busca en nuestra colección..."
                 className="block w-full rounded-md border-0 bg-white dark:bg-stone-800 py-3 pl-10 pr-3 text-stone-900 dark:text-stone-200 ring-1 ring-inset ring-stone-300 dark:ring-stone-700 placeholder:text-stone-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6"
               />
             </div>
@@ -52,8 +59,8 @@ export default function ShopPage({ products }) {
           <div className="mt-12">
             {filteredProducts.length > 0 ? (
               <div className="grid grid-cols-2 gap-2 sm:gap-4 lg:gap-6 sm:grid-cols-3 lg:grid-cols-4">
-                {filteredProducts.map((product) => (
-                  <ProductCard key={product.id} product={product} />
+                {filteredProducts.map((group) => (
+                  <ProductCard key={group.groupCode} group={group} />
                 ))}
               </div>
             ) : (
@@ -67,33 +74,6 @@ export default function ShopPage({ products }) {
               </div>
             )}
           </div>
-
-          {/* --- NEW SECTION FOR MATERIALS --- */}
-          <div className="mt-20">
-            <h2 className="font-serif text-3xl font-bold tracking-tight text-stone-900 dark:text-white text-center">
-              Nuestros Materiales
-            </h2>
-            <div className="mt-12">
-              {isLoading && <p className="text-center text-stone-500">Cargando materiales...</p>}
-              {isError && <p className="text-center text-red-500">Error al cargar los materiales.</p>}
-              {materials && (
-                <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-                  {materials.map(material => {
-                    const name = material.descriptions?.find(d => d.lang === 'es')?.value || material.descriptions?.[0]?.value || 'Nombre no disponible';
-                    const imageUrl = material.resources?.find(r => r.content_type?.startsWith('image/'))?.url || 'https://via.placeholder.com/150';
-                    return (
-                      <div key={material.id} className="text-center">
-                        <img src={imageUrl} alt={name} className="w-24 h-24 mx-auto rounded-lg object-cover bg-stone-200" />
-                        <p className="mt-2 text-sm font-medium text-stone-900 dark:text-white">{name}</p>
-                      </div>
-                    )
-                  })}
-                </div>
-              )}
-            </div>
-          </div>
-          {/* --- END OF NEW SECTION --- */}
-
         </div>
       </main>
       <Footer />

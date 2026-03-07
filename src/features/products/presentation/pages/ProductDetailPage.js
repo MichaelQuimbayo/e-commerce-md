@@ -195,7 +195,7 @@ export default function ProductDetailPage({ productGroup: serverProductGroup, cu
 
   return (
     <> 
-      <Head><title>{`${displayVariant.name} | ATHLOS`}</title></Head>
+      <Head><title>{`${displayVariant.name} | AV-STORE`}</title></Head>
       <Navbar />
       <main className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-16 bg-white">
         <div className="grid md:grid-cols-2 gap-x-8 lg:gap-x-16">
@@ -274,7 +274,15 @@ export default function ProductDetailPage({ productGroup: serverProductGroup, cu
                 </div>
             </div>
             <div className="mt-6 space-y-4">
-              <details className="group border-b border-stone-300 pb-4"><summary className="flex justify-between items-center cursor-pointer list-none"><span className="font-medium">Envío y Devoluciones</span><ChevronDown className="group-open:rotate-180" /></summary><p className="mt-4 text-stone-600">Envío estándar gratuito. Devoluciones aceptadas dentro de los 30 días.</p></details>
+              <details className="group border-b border-stone-300 pb-4"><summary className="flex justify-between items-center cursor-pointer list-none"><span className="font-medium">Cambios y Devoluciones</span><ChevronDown className="group-open:rotate-180" /></summary><p className="mt-4 text-stone-600">Los cambios no se realizan por talla solo por defecto de fábrica y este debe ser avisado a la tienda max. 24 horas de recibir la prenda.
+
+                La prenda debe estar sin uso, sin lavar, con etiquetas originales y en perfectas condiciones.
+
+                Las camisetas personalizadas, estampadas por pedido, con nombres, números o diseños especiales NO tienen cambio, salvo por defecto de fabricación.
+
+                No se aceptan cambios ni devoluciones por mal manejo del producto (lavado incorrecto, uso de secadora, plancha directa sobre el estampado, entre otros).
+
+                No se realizan devoluciones de dinero.</p></details>
             </div>
           </div>
         </div>

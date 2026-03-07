@@ -11,7 +11,7 @@ export default function CategoryPage({ products, categoryName }) {
   return (
     <>
       <Head>
-        <title>Ropa para {title} | ATHLOS</title>
+        <title>Ropa para {title} | AV-STORE</title>
         <meta name="description" content={`Descubre nuestra colección de ropa deportiva para ${title}.`} />
       </Head>
 
