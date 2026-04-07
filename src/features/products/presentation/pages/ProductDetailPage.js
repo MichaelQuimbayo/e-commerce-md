@@ -166,8 +166,7 @@ export default function ProductDetailPage({ productGroup: serverProductGroup, cu
   const handleAction = (e, actionType) => {
     e.preventDefault();
     if (!activeVariant || activeVariant.stock <= 0) return;
-    const productToAdd = { ...activeVariant, color: selectedColor, size: selectedSize };
-    addToCart(productToAdd, quantity);
+    addToCart(activeVariant, quantity); // FIX: Pass the class instance directly
     if (actionType === 'buy') router.push('/checkout');
     else showMessage(`¡'${displayVariant.name}' (${selectedColor}, ${selectedSize}) añadido al carrito!`);
   };

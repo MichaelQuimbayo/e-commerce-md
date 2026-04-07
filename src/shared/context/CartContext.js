@@ -23,7 +23,19 @@ export const CartProvider = ({ children }) => {
             : item
         );
       } else {
-        return [...prevItems, { ...product, variantId, quantity }];
+        // Create a plain object for the cart, explicitly calling getters
+        const newCartItem = {
+          id: product.id,
+          variantId: variantId,
+          name: product.name,
+          price: product.price,
+          image: product.primaryImage, // Explicitly get the image URL
+          color: product.color,
+          size: product.size,
+          quantity: quantity,
+          stock: product.stock,
+        };
+        return [...prevItems, newCartItem];
       }
     });
   };
